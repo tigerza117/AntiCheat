@@ -26,12 +26,12 @@
                 switch ($packet->flags) {
                     case 614:
                         var_dump("FUCK");
-                        if(!$player->isCreative() and !$player->isSpectator()){
+                        if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight()){
                             var_dump("ไอสัส Hack ลอยขึ้น");
                         }
                         break;
                     case 102:
-                        if(!$player->isCreative() and !$player->isSpectator()){
+                        if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight()){
                             var_dump("ไอสัส Hack ลอยลง");
                         }
                         break;
