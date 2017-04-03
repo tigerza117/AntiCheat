@@ -17,22 +17,19 @@
         public function onRecieve(DataPacketReceiveEvent $event) {
             $player = $event->getPlayer();
             $packet = $event->getPacket();
-            var_dump($packet->pid());
-            if ($packet instanceof SetPlayerGameTypePacket){
-                var_dump("FUCK");
-            }
             if ($packet instanceof AdventureSettingsPacket) {
                 $event->setCancelled();
                 switch ($packet->flags) {
                     case 614:
-                        var_dump("FUCK");
                         if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight()){
-                            var_dump("ไอสัส Hack ลอยขึ้น");
+                            var_dump("ไอสัส ".$player->getName()." Hack ลอยขึ้น");
+                            $player->kick("ไอสัส HACK");
                         }
                         break;
                     case 102:
                         if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight()){
-                            var_dump("ไอสัส Hack ลอยลง");
+                            var_dump("ไอสัส ".$player->getName()." Hack ลอยลง");
+                            $player->kick("ไอสัส HACK");
                         }
                         break;
                     default:
