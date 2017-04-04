@@ -76,7 +76,6 @@
                         $player->kick(TextFormat::RED."ไอสัส Hack โดดสูง หรือ บิน");
                     }
                 }
-                
             }
 	    }
     }
