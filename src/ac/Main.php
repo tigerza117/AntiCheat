@@ -5,13 +5,12 @@
     use pocketmine\event\Listener;
     use pocketmine\plugin\PluginBase;
     use pocketmine\network\protocol\AdventureSettingsPacket;
-    use pocketmine\network\protocol\PlayerActionPacket;
     use pocketmine\event\server\DataPacketReceiveEvent;
     use pocketmine\event\player\PlayerJoinEvent;
     use pocketmine\event\player\PlayerMoveEvent;
     use pocketmine\entity\Effect;
     use pocketmine\utils\TextFormat;
-    use pocketmine\math\Vector3;
+    use pocketmine\Player;
 
     class Main extends PluginBase implements Listener {
 
@@ -32,14 +31,14 @@
                 switch ($packet->flags) {
                     case 614:
                         if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight()){
-                            var_dump("ไอสัส ".$player->getName()." Hack Fly");
-                            $player->kick("ไอสัส HACK Fly");
+                            var_dump("ไอสัส ".$player->getName()." Hack บิน");
+                            $player->kick("ไอสัส HACK บิน");
                         }
                         break;
                     case 102:
                         if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight()){
-                            var_dump("ไอสัส ".$player->getName()." Hack Fly");
-                            $player->kick(TextFormat::RED."ไอสัส HACK Fly");
+                            var_dump("ไอสัส ".$player->getName()." Hack บิน");
+                            $player->kick(TextFormat::RED."ไอสัส HACK บิน");
                         }
                         break;
                     default:
@@ -50,16 +49,26 @@
 
         public function PlayerMove(PlayerMoveEvent $event){
             $player = $event->getPlayer();
-            if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight() and !$player->hasEffect(Effect::JUMP)){
-                if(round($event->getTo()->getY() - $event->getFrom()->getY(),3) >= 0.375 or round($event->getTo()->getY() - $event->getFrom()->getY(),3) === -0.375) {
-                    $this->players[$name] ++;
-                }else{
-                    $this->players[$name] = 0;
+            var_dump(abs(round(($event->getTo()->getX() - $event->getFrom()->getX()) * ($event->getTo()->getZ() - $event->getFrom()->getZ()),3)));
+            if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp()){
+                if(!$player->hasEffect(Effect::SPEED)){
+                    if(abs(round(($event->getTo()->getX() - $event->getFrom()->getX()) * ($event->getTo()->getZ() - $event->getFrom()->getZ()),3)) >= 1){
+                        var_dump("ไอสัส ".$player->getName()." Hack วิ่ง");
+                        $player->kick(TextFormat::RED."ไอสัส Hack วิ่ง");
+                    }
                 }
-                if($this->players[$name] >= 3){
-	                var_dump("ไอสัส ".$player->getName()." Hack โดดสูง หรือ Fly");
-                    $player->kick(TextFormat::RED."ไอสัส Hack โดดสูง หรือ Fly");
-	            }
+                if(!$player->getAllowFlight() and !$player->hasEffect(Effect::JUMP)){
+                    if(round($event->getTo()->getY() - $event->getFrom()->getY(),3) >= 0.375) {
+                        $this->players[$player->getName()] ++;
+                    }else{
+                        $this->players[$player->getName()] = 0;
+                    }
+                    if($this->players[$player->getName()] >= 3){
+                        var_dump("ไอสัส ".$player->getName()." Hack โดดสูง หรือ บืน");
+                        $player->kick(TextFormat::RED."ไอสัส Hack โดดสูง หรือ บิน");
+                    }
+                }
+                
             }
 	    }
     }
