@@ -5,10 +5,9 @@
 เครื่องเทศ
 สารพัดของกุ๊กกิ๊ก
 
-รวมเป็น AntiCheatผู้ปราบมาร ชิตังเมๆๆ
+รวมเป็น AntiCheat ผู้ปราบมาร ชิตังเมๆๆ
 
 กันอะไรได้บ้าง
 - Fly 
 - HighJump
-- TapTelePort
 - UpdateAttributes HACK 
