@@ -59,12 +59,12 @@
         public function PlayerMove(PlayerMoveEvent $event){
             $player = $event->getPlayer();
             if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp()){
-                if(!$player->hasEffect(Effect::SPEED)){ #กัน TapTelePort เตะทันทีที่วาป โอกาศ 80% กันได้ กัน Speed ได้แค่ 10% ไม่เตะมั่ว 100%
-                    if(abs(round(($event->getTo()->getX() - $event->getFrom()->getX()) * ($event->getTo()->getZ() - $event->getFrom()->getZ()),3)) > 1){
+            /*    if(!$player->hasEffect(Effect::SPEED)){ #กัน TapTelePort เตะทันทีที่วาป โอกาศ 80% กันได้ กัน Speed ได้แค่ 10% ไม่เตะมั่ว 80%
+                    if(abs(round(($event->getTo()->getX() - $event->getFrom()->getX()) * ($event->getTo()->getZ() - $event->getFrom()->getZ()),3)) >= 3){
                         var_dump($player->getName()." Hack Speed");
                         $player->kick(TextFormat::RED."Hack Speed");
                     }
-                }
+                }*/
                 if(!$player->getAllowFlight() and !$player->hasEffect(Effect::JUMP)){ #กัน โดดสูงๆ โอกาศป้องกันขั้นนี้ 90% ไม่เตะมั่ว 100%
                     if(round($event->getTo()->getY() - $event->getFrom()->getY(),3) === 0.375) {
                         $this->players[$player->getName()] ++;
@@ -72,8 +72,8 @@
                         $this->players[$player->getName()] = 0;
                     }
                     if($this->players[$player->getName()] >= 3){
-                        var_dump($player->getName()." Hack HighJUMP or Fly");
-                        $player->kick(TextFormat::RED."Hack HighJUMP or Fly");
+                        var_dump($player->getName()." Hack HighJUMP");
+                        $player->kick(TextFormat::RED."Hack HighJUMP");
                     }
                 }
             }
