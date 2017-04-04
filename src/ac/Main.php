@@ -11,6 +11,7 @@
     use pocketmine\event\player\PlayerMoveEvent;
     use pocketmine\entity\Effect;
     use pocketmine\utils\TextFormat;
+    use pocketmine\math\Vector3;
 
     class Main extends PluginBase implements Listener {
 
@@ -42,21 +43,8 @@
                         }
                         break;
                     default:
-                        # code...
                         break;
                 }
-                var_dump($packet->flags);
-            }
-            if ($packet instanceof PlayerActionPacket) {
-                switch ($packet->action) {
-                    case 8:
-                        var_dump("โดด");
-                        break;
-                    default:
-                        # code...
-                        break;
-                }
-                var_dump($packet->action);
             }
         }
 
