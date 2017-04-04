@@ -58,7 +58,6 @@
 
         public function PlayerMove(PlayerMoveEvent $event){
             $player = $event->getPlayer();
-            var_dump(abs(round(($event->getTo()->getX() - $event->getFrom()->getX()) * ($event->getTo()->getZ() - $event->getFrom()->getZ()),3)));
             if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp()){
                 if(!$player->hasEffect(Effect::SPEED)){ #กัน TapTelePort เตะทันทีที่วาป โอกาศ 80% กันได้ กัน Speed ได้แค่ 10% ไม่เตะมั่ว 100%
                     if(abs(round(($event->getTo()->getX() - $event->getFrom()->getX()) * ($event->getTo()->getZ() - $event->getFrom()->getZ()),3)) >= 1){
