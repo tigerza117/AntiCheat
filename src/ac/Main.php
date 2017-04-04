@@ -10,6 +10,7 @@
     use pocketmine\event\player\PlayerMoveEvent;
     use pocketmine\entity\Effect;
     use pocketmine\utils\TextFormat;
+    use pocketmine\network\protocol\UpdateAttributesPacket;
 
     class Main extends PluginBase implements Listener {
 
@@ -31,6 +32,10 @@
         public function onRecieve(DataPacketReceiveEvent $event) {
             $player = $event->getPlayer();
             $packet = $event->getPacket();
+            if($packet instanceof UpdateAttributesPacket){ #กัน Player ส่ง Data AttributesPacket เพราะมันเกี่ยวกันเลือด อาหาร Speed การเดิม //พบคน Hack อาการนี้น้อย
+                var_dump("ไอสัส ".$player->getName()." Hack AttributesPacket");
+                $player->kick("ไอสัส HACK AttributesPacket");
+            }
             if ($packet instanceof AdventureSettingsPacket) { 
                 switch ($packet->flags) { 
                     case 614: #กัน Fly ชั้นที่ 1 เช้ค packet ใช้ปุ่มลอย ไม่เตะมั่ว 100%
