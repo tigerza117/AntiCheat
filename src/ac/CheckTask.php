@@ -17,7 +17,7 @@
 		public function onRun($tick){
 			$list = $this->instance->movePlayers;
 			foreach ($list as $key => $value) {
-				var_dump($value["distance"]);
+				//var_dump($key." : "$value["distance"]); เช้คระยะทางก็เปิดมา
 				if((int) $value["distance"] >= (int) 8.5){
 					$this->instance->point[$key]["distance"]++;
 					if((int) $this->instance->point[$key]["distance"] >= (int) 3){
