@@ -6,76 +6,77 @@
     use pocketmine\plugin\PluginBase;
     use pocketmine\network\protocol\AdventureSettingsPacket;
     use pocketmine\event\server\DataPacketReceiveEvent;
-    use pocketmine\event\player\PlayerJoinEvent;
-    use pocketmine\event\player\PlayerMoveEvent;
-    use pocketmine\entity\Effect;
-    use pocketmine\utils\TextFormat;
     use pocketmine\network\protocol\UpdateAttributesPacket;
+    use pocketmine\event\player\PlayerJoinEvent;
+    use pocketmine\event\player\PlayerQuitEvent;
+    use pocketmine\event\player\PlayerKickEvent;
+    use pocketmine\event\player\PlayerMoveEvent;
+    use pocketmine\utils\TextFormat;
+    use pocketmine\Player;
 
     class Main extends PluginBase implements Listener {
 
-        #เอาไปใช้ดีก็ขอบคุณกันนิดนึง 
-        #By TIGER OWNER APPLECRAFt
+        public $movePlayers = [];
 
-        #AppleCraft ip : applecraft.cf port : 19132
-
-        public $players = [];
+        public $point = [];
 
         public function onEnable() {
             $this->getServer()->getPluginManager()->registerEvents($this, $this);
+            $this->getServer()->getScheduler()->scheduleRepeatingTask(new CheckTask($this), 20);
         }
 
+        public function onPlayerKick(PlayerKickEvent $event){
+            if($event->getReason() === "Sorry, hack mods are not permitted on Steadfast... at all."){
+                $event->setCancelled(true);
+            }
+    	}
+
         public function onPlayerJoin(PlayerJoinEvent $event){
-            $this->players[$event->getPlayer()->getName()] = 0;
+            $player = $event->getPlayer();
+            $this->movePlayers[$player->getName()]["distance"] = 0;
+            $this->point[$player->getName()]["distance"] = 0;
+    	}
+
+        public function onPlayerQuit(PlayerQuitEvent $event){
+            $player = $event->getPlayer();
+            unset($this->movePlayers[$player->getName()]);
+            unset($this->point[$player->getName()]);
+    	}
+
+        public function onPlayerMove(PlayerMoveEvent $event){
+            $player = $event->getPlayer();
+            $oldPos= $event->getFrom();
+		    $newPos = $event->getTo();
+            if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight()){
+                $this->movePlayers[$player->getName()]["distance"] += sqrt(($newPos->getX() - $oldPos->getX()) ** 2 + ($newPos->getZ() - $oldPos->getZ()) ** 2);
+            }
     	}
 
         public function onRecieve(DataPacketReceiveEvent $event) {
             $player = $event->getPlayer();
             $packet = $event->getPacket();
-            if($packet instanceof UpdateAttributesPacket){ #กัน Player ส่ง Data AttributesPacket เพราะมันเกี่ยวกันเลือด อาหาร Speed การเดิม //พบคน Hack อาการนี้น้อย
-                var_dump($player->getName()." Hack AttributesPacket");
-                $player->kick("HACK AttributesPacket");
+            if($packet instanceof UpdateAttributesPacket){ 
+                $player->kick(TextFormat::RED."HACK UpdateAttributesPacket");
             }
-            if ($packet instanceof AdventureSettingsPacket) { 
-                switch ($packet->flags) { 
-                    case 614: #กัน Fly ชั้นที่ 1 เช้ค packet ใช้ปุ่มลอย ไม่เตะมั่ว 100%
-                        if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight()){
-                            var_dump($player->getName()." Hack Fly");
-                            $player->kick("HACK Fly");
-                        }
-                        break;
-                    case 102: #กัน Fly ชั้นที่ 1 เช้ค packet ใช้ปุ่มลอย ไม่เตะมั่ว 100%
-                        if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight()){
-                            var_dump($player->getName()." Hack Fly");
-                            $player->kick(TextFormat::RED."HACK Fly");
-                        }
-                        break;
-                    default:
-                        break;
+            if($packet instanceof SetPlayerGameTypePacket){ 
+                $player->kick(TextFormat::RED."HACK SetPlayerGameTypePacket");
+            }
+            if($packet instanceof AdventureSettingsPacket){
+                if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight()){
+                    switch ($packet->flags){
+                        case 614:
+                        case 102:
+                        case 615:
+                        case 103:
+                            $player->kick(TextFormat::RED."HACK Fly and NoClip");
+                            break;
+                        default:
+                            break;
+                    }
+                    if((($packet->flags >> 9) & 0x01 === 1) or (($packet->flags >> 7) & 0x01 === 1) or (($packet->flags >> 6) & 0x01 === 1)){
+                        $player->kick(TextFormat::RED."HACK Fly and NoClip");
+                    }
                 }
             }
         }
-
-        public function PlayerMove(PlayerMoveEvent $event){
-            $player = $event->getPlayer();
-            if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp()){
-            /*    if(!$player->hasEffect(Effect::SPEED)){ #กัน TapTelePort เตะทันทีที่วาป โอกาศ 80% กันได้ กัน Speed ได้แค่ 10% ไม่เตะมั่ว 80%
-                    if(abs(round(($event->getTo()->getX() - $event->getFrom()->getX()) * ($event->getTo()->getZ() - $event->getFrom()->getZ()),3)) >= 3){
-                        var_dump($player->getName()." Hack Speed");
-                        $player->kick(TextFormat::RED."Hack Speed");
-                    }
-                }*/
-                if(!$player->getAllowFlight() and !$player->hasEffect(Effect::JUMP)){ #กัน โดดสูงๆ โอกาศป้องกันขั้นนี้ 90% ไม่เตะมั่ว 100%
-                    if(round($event->getTo()->getY() - $event->getFrom()->getY(),3) === 0.375) {
-                        $this->players[$player->getName()] ++;
-                    }else{
-                        $this->players[$player->getName()] = 0;
-                    }
-                    if($this->players[$player->getName()] >= 3){
-                        var_dump($player->getName()." Hack HighJUMP");
-                        $player->kick(TextFormat::RED."Hack HighJUMP");
-                    }
-                }
-            }
-	    }
     }
