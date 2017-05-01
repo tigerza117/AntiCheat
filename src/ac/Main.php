@@ -4,21 +4,30 @@
 
     use pocketmine\event\Listener;
     use pocketmine\plugin\PluginBase;
+    use pocketmine\network\protocol\AddPlayerPacket;
+    use pocketmine\network\protocol\RemoveEntityPacket;
     use pocketmine\network\protocol\AdventureSettingsPacket;
-    use pocketmine\event\server\DataPacketReceiveEvent;
     use pocketmine\network\protocol\UpdateAttributesPacket;
+    use pocketmine\event\server\DataPacketReceiveEvent;
     use pocketmine\event\player\PlayerJoinEvent;
     use pocketmine\event\player\PlayerQuitEvent;
     use pocketmine\event\player\PlayerKickEvent;
     use pocketmine\event\player\PlayerMoveEvent;
     use pocketmine\utils\TextFormat;
+    use pocketmine\utils\UUID;
+    use pocketmine\item\Item;
+    use pocketmine\entity\Entity;
     use pocketmine\Player;
+    use pocketmine\event\entity\EntityDamageByEntityEvent;
+    use pocketmine\event\entity\EntityDamageEvent;
 
     class Main extends PluginBase implements Listener {
 
         public $movePlayers = [];
 
         public $point = [];
+
+        public $npcs = [];
 
         public function onEnable() {
             $this->getServer()->getPluginManager()->registerEvents($this, $this);
@@ -27,12 +36,50 @@
 
         public function onPlayerKick(PlayerKickEvent $event){
             if($event->getReason() === "Sorry, hack mods are not permitted on Steadfast... at all."){
-                $event->setCancelled(true);
+                //$event->setCancelled(true);
             }
     	}
 
+        public function onDamage(EntityDamageEvent $event){
+            if($event instanceof EntityDamageByEntityEvent and $event->getEntity() instanceof Player and $event->getDamager() instanceof Player){
+                if($event->getEntity()->distanceSquared($event->getDamager()) >= 12){
+                    $event->setCancelled();
+                }
+            }
+        }
+
         public function onPlayerJoin(PlayerJoinEvent $event){
+            $id = Entity::$entityCount++;
+            $uuid = UUID::fromRandom();
             $player = $event->getPlayer();
+
+            $pkadd = new AddPlayerPacket();
+            $pkadd->uuid = $uuid;
+            $pkadd->username = "";
+            $pkadd->eid = $id;
+            $pkadd->x = $player->x;
+            $pkadd->y = $player->y - 2;
+            $pkadd->z = $player->z;
+            $pkadd->yaw = 0;
+            $pkadd->pitch = 0;
+            $pkadd->item = Item::fromString(0);;
+            $flags = 0;
+            $flags |= 1 << 5;
+            $flags |= 1 << 14;
+            $flags |= 1 << 15;
+            $flags |= 1 << 16;
+            $pkadd->metadata = [ 
+                Entity::DATA_FLAGS => [Entity::DATA_TYPE_LONG, $flags],
+                Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, ""]
+            ];
+
+            $pkremove = new RemoveEntityPacket();
+            $pkremove->eid = $id;
+
+            $this->npcs[$player->getName()]["add"] = $pkadd;
+            $this->npcs[$player->getName()]["id"] = $id;
+            $this->npcs[$player->getName()]["remove"] = $pkremove;
+            $player->dataPacket($this->npcs[$player->getName()]["add"]);
             $this->movePlayers[$player->getName()]["distance"] = 0;
             $this->point[$player->getName()]["distance"] = 0;
     	}
@@ -41,6 +88,7 @@
             $player = $event->getPlayer();
             unset($this->movePlayers[$player->getName()]);
             unset($this->point[$player->getName()]);
+            unset($this->npcs[$player->getName()]);
     	}
 
         public function onPlayerMove(PlayerMoveEvent $event){

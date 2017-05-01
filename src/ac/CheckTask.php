@@ -16,12 +16,20 @@
 
 		public function onRun($tick){
 			$list = $this->instance->movePlayers;
+			$npcs = $this->instance->npcs;
+			
 			foreach ($list as $key => $value) {
-				//var_dump($key." : "$value["distance"]); เช้คระยะทางก็เปิดมา
+				$player = $this->instance->getServer()->getPlayer($key);
+				if($player instanceof Player){
+					$player->dataPacket($npcs[$player->getName()]["remove"]);
+					$npcs[$player->getName()]["add"]->x = $player->x; 
+					$npcs[$player->getName()]["add"]->y = $player->y - 2; 
+					$npcs[$player->getName()]["add"]->z = $player->z; 
+					$player->dataPacket($npcs[$player->getName()]["add"]);
+				}
 				if((int) $value["distance"] >= (int) 8.5){
 					$this->instance->point[$key]["distance"]++;
 					if((int) $this->instance->point[$key]["distance"] >= (int) 3){
-						$player = $this->instance->getServer()->getPlayer($key);
 						if($player instanceof Player){
 							$player->kick(TextFormat::RED."#HACK Speed");
 						}
@@ -31,6 +39,4 @@
 				}
 			}
 		}
-
 	}
-?>
