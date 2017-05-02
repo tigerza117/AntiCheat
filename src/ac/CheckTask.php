@@ -34,7 +34,9 @@
 							$player->kick(TextFormat::RED."#HACK Speed");
 						}
 					}
-				} 
+				} else {
+					$this->instance->point[$key]["distance"] = (float) 0;
+				}
 				if((float) $value["fly"] > (float) 7.4){
 					$this->instance->point[$key]["fly"] += (float) 1;
 					if((float) $this->instance->point[$key]["fly"] > (float) 2){
@@ -42,7 +44,9 @@
 							$player->kick(TextFormat::RED."#HACK Fly");
 						}
 					}
-				} 
+				} else {
+					$this->instance->point[$key]["fly"] = (float) 0;
+				}
 				$this->instance->movePlayers[$key]["distance"] = (float) 0;
 				$this->instance->movePlayers[$key]["fly"] = (float) 0;
 			}
