@@ -21,22 +21,30 @@
 			foreach ($list as $key => $value) {
 				$player = $this->instance->getServer()->getPlayer($key);
 				if($player instanceof Player){
-					$player->dataPacket($npcs[$player->getName()]["remove"]);
-					$npcs[$player->getName()]["add"]->x = $player->x; 
-					$npcs[$player->getName()]["add"]->y = $player->y - 2; 
-					$npcs[$player->getName()]["add"]->z = $player->z; 
-					$player->dataPacket($npcs[$player->getName()]["add"]);
+					$player->dataPacket($npcs["remove"]);
+					$npcs["add"]->x = $player->x; 
+					$npcs["add"]->y = $player->y - 2; 
+					$npcs["add"]->z = $player->z; 
+					$player->dataPacket($npcs["add"]);
 				}
-				if((int) $value["distance"] >= (int) 8.5){
-					$this->instance->point[$key]["distance"]++;
-					if((int) $this->instance->point[$key]["distance"] >= (int) 3){
+				if((float) $value["distance"] > (float) 7.4){
+					$this->instance->point[$key]["distance"] += (float) 1;
+					if((float) $this->instance->point[$key]["distance"] > (float) 2){
 						if($player instanceof Player){
 							$player->kick(TextFormat::RED."#HACK Speed");
 						}
 					}
-				} else {
-					$this->instance->movePlayers[$key]["distance"] = 0;
-				}
+				} 
+				if((float) $value["fly"] > (float) 7.4){
+					$this->instance->point[$key]["fly"] += (float) 1;
+					if((float) $this->instance->point[$key]["fly"] > (float) 2){
+						if($player instanceof Player){
+							$player->kick(TextFormat::RED."#HACK Fly");
+						}
+					}
+				} 
+				$this->instance->movePlayers[$key]["distance"] = (float) 0;
+				$this->instance->movePlayers[$key]["fly"] = (float) 0;
 			}
 		}
 	}

@@ -13,13 +13,15 @@
     use pocketmine\event\player\PlayerQuitEvent;
     use pocketmine\event\player\PlayerKickEvent;
     use pocketmine\event\player\PlayerMoveEvent;
+    use pocketmine\event\entity\EntityDamageByEntityEvent;
+    use pocketmine\event\entity\EntityDamageEvent;
     use pocketmine\utils\TextFormat;
     use pocketmine\utils\UUID;
     use pocketmine\item\Item;
     use pocketmine\entity\Entity;
     use pocketmine\Player;
-    use pocketmine\event\entity\EntityDamageByEntityEvent;
-    use pocketmine\event\entity\EntityDamageEvent;
+    use pocketmine\math\Vector3;
+    use pocketmine\block\Block;
 
     class Main extends PluginBase implements Listener {
 
@@ -30,36 +32,16 @@
         public $npcs = [];
 
         public function onEnable() {
-            $this->getServer()->getPluginManager()->registerEvents($this, $this);
-            $this->getServer()->getScheduler()->scheduleRepeatingTask(new CheckTask($this), 20);
-        }
-
-        public function onPlayerKick(PlayerKickEvent $event){
-            if($event->getReason() === "Sorry, hack mods are not permitted on Steadfast... at all."){
-                //$event->setCancelled(true);
-            }
-    	}
-
-        public function onDamage(EntityDamageEvent $event){
-            if($event instanceof EntityDamageByEntityEvent and $event->getEntity() instanceof Player and $event->getDamager() instanceof Player){
-                if($event->getEntity()->distanceSquared($event->getDamager()) >= 12){
-                    $event->setCancelled();
-                }
-            }
-        }
-
-        public function onPlayerJoin(PlayerJoinEvent $event){
             $id = Entity::$entityCount++;
             $uuid = UUID::fromRandom();
-            $player = $event->getPlayer();
 
             $pkadd = new AddPlayerPacket();
             $pkadd->uuid = $uuid;
             $pkadd->username = "";
             $pkadd->eid = $id;
-            $pkadd->x = $player->x;
-            $pkadd->y = $player->y - 2;
-            $pkadd->z = $player->z;
+            $pkadd->x = 0;
+            $pkadd->y = 0;
+            $pkadd->z = 0;
             $pkadd->yaw = 0;
             $pkadd->pitch = 0;
             $pkadd->item = Item::fromString(0);;
@@ -76,27 +58,57 @@
             $pkremove = new RemoveEntityPacket();
             $pkremove->eid = $id;
 
-            $this->npcs[$player->getName()]["add"] = $pkadd;
-            $this->npcs[$player->getName()]["id"] = $id;
-            $this->npcs[$player->getName()]["remove"] = $pkremove;
-            $player->dataPacket($this->npcs[$player->getName()]["add"]);
-            $this->movePlayers[$player->getName()]["distance"] = 0;
-            $this->point[$player->getName()]["distance"] = 0;
+            $this->npcs["add"] = $pkadd;
+            $this->npcs["id"] = $id;
+            $this->npcs["remove"] = $pkremove;
+
+            $this->getServer()->getPluginManager()->registerEvents($this, $this);
+            $this->getServer()->getScheduler()->scheduleRepeatingTask(new CheckTask($this), 20);
+        }
+
+        public function onPlayerKick(PlayerKickEvent $event){
+            if($event->getReason() === "Sorry, hack mods are not permitted on Steadfast... at all."){
+                //$event->setCancelled(true);
+            }
+    	}
+
+        public function onDamage(EntityDamageEvent $event){
+            if($event instanceof EntityDamageByEntityEvent and $event->getEntity() instanceof Player and $event->getDamager() instanceof Player){
+                if($event->isCancelled()){
+                } else {
+                    if(round($event->getEntity()->distanceSquared($event->getDamager())) >= 12){
+                        $event->setCancelled();
+                    }
+                }
+            }
+        }
+
+        public function onPlayerJoin(PlayerJoinEvent $event){
+            $player = $event->getPlayer();
+            $this->movePlayers[$player->getName()]["distance"] = (float) 0;
+            $this->point[$player->getName()]["distance"] = (float) 0;
+            $this->movePlayers[$player->getName()]["fly"] = (float) 0;
+            $this->point[$player->getName()]["fly"] = (float) 0;
     	}
 
         public function onPlayerQuit(PlayerQuitEvent $event){
             $player = $event->getPlayer();
             unset($this->movePlayers[$player->getName()]);
             unset($this->point[$player->getName()]);
-            unset($this->npcs[$player->getName()]);
     	}
 
         public function onPlayerMove(PlayerMoveEvent $event){
             $player = $event->getPlayer();
-            $oldPos= $event->getFrom();
+            $oldPos = $event->getFrom();
 		    $newPos = $event->getTo();
             if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight()){
-                $this->movePlayers[$player->getName()]["distance"] += sqrt(($newPos->getX() - $oldPos->getX()) ** 2 + ($newPos->getZ() - $oldPos->getZ()) ** 2);
+                $FlyMove = (float) round($newPos->getY() - $oldPos->getY(),3);
+                $DistanceMove = (float) round(sqrt(($newPos->getX() - $oldPos->getX()) ** 2 + ($newPos->getZ() - $oldPos->getZ()) ** 2),2);
+                if($FlyMove === (float) -0.002 or $FlyMove === (float) -0.003){
+                    $this->movePlayers[$player->getName()]["distance"] += 3;
+                }
+                $this->movePlayers[$player->getName()]["fly"] += $FlyMove;
+                $this->movePlayers[$player->getName()]["distance"] += $DistanceMove;
             }
     	}
 
@@ -104,25 +116,27 @@
             $player = $event->getPlayer();
             $packet = $event->getPacket();
             if($packet instanceof UpdateAttributesPacket){ 
-                $player->kick(TextFormat::RED."HACK UpdateAttributesPacket");
+                $player->kick(TextFormat::RED."#HACK UpdateAttributesPacket");
             }
             if($packet instanceof SetPlayerGameTypePacket){ 
-                $player->kick(TextFormat::RED."HACK SetPlayerGameTypePacket");
+                $player->kick(TextFormat::RED."#HACK SetPlayerGameTypePacket");
             }
             if($packet instanceof AdventureSettingsPacket){
                 if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight()){
-                    switch ($packet->flags){
+                    switch ($packet->flags){ //Packet ส่งขอลอย
                         case 614:
-                        case 102:
                         case 615:
                         case 103:
-                            $player->kick(TextFormat::RED."HACK Fly and NoClip");
+                        case 102:
+                        case 38:
+                        case 39:
+                            $player->kick(TextFormat::RED."#HACK Fly and NoClip");
                             break;
                         default:
                             break;
                     }
                     if((($packet->flags >> 9) & 0x01 === 1) or (($packet->flags >> 7) & 0x01 === 1) or (($packet->flags >> 6) & 0x01 === 1)){
-                        $player->kick(TextFormat::RED."HACK Fly and NoClip");
+                        $player->kick(TextFormat::RED."#HACK Fly and NoClip");
                     }
                 }
             }
