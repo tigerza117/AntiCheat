@@ -27,9 +27,9 @@
 					$npcs["add"]->z = $player->z; 
 					$player->dataPacket($npcs["add"]);
 				}
-				if((float) $value["distance"] > (float) 7.4){
+				if((float) $value["distance"] > (float) 7.6){
 					$this->instance->point[$key]["distance"] += (float) 1;
-					if((float) $this->instance->point[$key]["distance"] > (float) 2){
+					if((float) $this->instance->point[$key]["distance"] > (float) 3){
 						if($player instanceof Player){
 							$player->kick(TextFormat::RED."#HACK Speed");
 						}
@@ -39,7 +39,7 @@
 				}
 				if((float) $value["fly"] > (float) 7.4){
 					$this->instance->point[$key]["fly"] += (float) 1;
-					if((float) $this->instance->point[$key]["fly"] > (float) 2){
+					if((float) $this->instance->point[$key]["fly"] > (float) 3){
 						if($player instanceof Player){
 							$player->kick(TextFormat::RED."#HACK Fly");
 						}
