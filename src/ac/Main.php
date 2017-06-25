@@ -73,7 +73,7 @@
     	}
 
         public function onDamage(EntityDamageEvent $event){
-            if($event instanceof EntityDamageByEntityEvent and $event->getEntity() instanceof Player and $event->getDamager() instanceof Player){
+            if($event instanceof EntityDamageByEntityEvent and $event->getEntity() instanceof Player and $event->getDamager() instanceof Player and $event->getCause() === EntityDamageEvent::CAUSE_ENTITY_ATTACK){
                 if($event->isCancelled()){
                 } else {
                     if(round($event->getEntity()->distanceSquared($event->getDamager())) >= 12){
