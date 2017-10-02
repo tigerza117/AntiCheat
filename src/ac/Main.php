@@ -11,7 +11,6 @@
     use pocketmine\event\server\DataPacketReceiveEvent;
     use pocketmine\event\player\PlayerJoinEvent;
     use pocketmine\event\player\PlayerQuitEvent;
-    use pocketmine\event\player\PlayerKickEvent;
     use pocketmine\event\player\PlayerMoveEvent;
     use pocketmine\event\entity\EntityDamageByEntityEvent;
     use pocketmine\event\entity\EntityDamageEvent;
@@ -66,17 +65,10 @@
             $this->getServer()->getScheduler()->scheduleRepeatingTask(new CheckTask($this), 20);
         }
 
-        public function onPlayerKick(PlayerKickEvent $event){
-            if($event->getReason() === "Sorry, hack mods are not permitted on Steadfast... at all."){
-                //$event->setCancelled(true);
-            }
-    	}
-
         public function onDamage(EntityDamageEvent $event){
-            if($event instanceof EntityDamageByEntityEvent and $event->getEntity() instanceof Player and $event->getDamager() instanceof Player and $event->getCause() === EntityDamageEvent::CAUSE_ENTITY_ATTACK){
-                if($event->isCancelled()){
-                } else {
-                    if(round($event->getEntity()->distanceSquared($event->getDamager())) >= 12){
+            if($event instanceof EntityDamageByEntityEvent && $event->getEntity() instanceof Player && $event->getDamager() instanceof Player && $event->getCause() === EntityDamageEvent::CAUSE_ENTITY_ATTACK){
+                if(!$event->isCancelled()){
+		    if(round($event->getEntity()->distanceSquared($event->getDamager())) >= 12){
                         $event->setCancelled();
                     }
                 }
@@ -100,11 +92,11 @@
         public function onPlayerMove(PlayerMoveEvent $event){
             $player = $event->getPlayer();
             $oldPos = $event->getFrom();
-		    $newPos = $event->getTo();
-            if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight()){
+	    $newPos = $event->getTo();
+            if(!$player->isCreative() && !$player->isSpectator() && !$player->isOp() && !$player->getAllowFlight()){
                 $FlyMove = (float) round($newPos->getY() - $oldPos->getY(),3);
                 $DistanceMove = (float) round(sqrt(($newPos->getX() - $oldPos->getX()) ** 2 + ($newPos->getZ() - $oldPos->getZ()) ** 2),2);
-                if($FlyMove === (float) -0.002 or $FlyMove === (float) -0.003){
+                if($FlyMove === (float) -0.002 || $FlyMove === (float) -0.003){
                     $this->movePlayers[$player->getName()]["distance"] += 3;
                 }
                 $this->movePlayers[$player->getName()]["fly"] += $FlyMove;
@@ -117,12 +109,14 @@
             $packet = $event->getPacket();
             if($packet instanceof UpdateAttributesPacket){ 
                 $player->kick(TextFormat::RED."#HACK UpdateAttributesPacket");
+		return;
             }
             if($packet instanceof SetPlayerGameTypePacket){ 
                 $player->kick(TextFormat::RED."#HACK SetPlayerGameTypePacket");
+		return;
             }
             if($packet instanceof AdventureSettingsPacket){
-                if(!$player->isCreative() and !$player->isSpectator() and !$player->isOp() and !$player->getAllowFlight()){
+                if(!$player->isCreative() && !$player->isSpectator() && !$player->isOp() && !$player->getAllowFlight()){
                     switch ($packet->flags){ //Packet ส่งขอลอย
                         case 614:
                         case 615:
@@ -131,12 +125,14 @@
                         case 38:
                         case 39:
                             $player->kick(TextFormat::RED."#HACK Fly and NoClip");
+			    return;
                             break;
                         default:
                             break;
                     }
-                    if((($packet->flags >> 9) & 0x01 === 1) or (($packet->flags >> 7) & 0x01 === 1) or (($packet->flags >> 6) & 0x01 === 1)){
+                    if((($packet->flags >> 9) & 0x01 === 1) || (($packet->flags >> 7) & 0x01 === 1) || (($packet->flags >> 6) & 0x01 === 1)){
                         $player->kick(TextFormat::RED."#HACK Fly and NoClip");
+			return;
                     }
                 }
             }
